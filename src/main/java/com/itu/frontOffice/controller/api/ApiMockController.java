@@ -5,14 +5,15 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
 public class ApiMockController {
     
-    // Données mockées pour simulation
+    // Données mockées
     private final List<ReservationDTO> mockReservations = Arrays.asList(
         new ReservationDTO(1L, 1001L, 2, 
             LocalDateTime.of(2024, 1, 15, 10, 30), "Hôtel Paris"),
@@ -28,54 +29,30 @@ public class ApiMockController {
             LocalDateTime.of(2024, 1, 18, 13, 15), "Hôtel Toulouse")
     );
     
-    /**
-     * API: GET toutes les réservations
-     */
     @GetMapping("/reservations")
     public List<ReservationDTO> getAllReservations() {
+        System.out.println("API appelée: GET /api/reservations");
+        System.out.println("Retour de " + mockReservations.size() + " réservations");
         return mockReservations;
     }
     
-    /**
-     * API: GET réservations filtrées par date
-     */
     @GetMapping("/reservations/filter")
     public List<ReservationDTO> getReservationsByDate(
             @RequestParam(value = "date", required = false) 
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         
+        System.out.println("API appelée: GET /api/reservations/filter?date=" + date);
+        
         if (date == null) {
+            System.out.println("Date null, retour de toutes les réservations");
             return mockReservations;
         }
         
-        return mockReservations.stream()
+        List<ReservationDTO> filtered = mockReservations.stream()
                 .filter(reservation -> reservation.getDateHeure().toLocalDate().equals(date))
                 .collect(Collectors.toList());
-    }
-    
-    /**
-     * API: Recherche par période (optionnel)
-     */
-    @GetMapping("/reservations/search")
-    public List<ReservationDTO> searchReservations(
-            @RequestParam(value = "startDate", required = false) LocalDate startDate,
-            @RequestParam(value = "endDate", required = false) LocalDate endDate) {
         
-        if (startDate == null && endDate == null) {
-            return mockReservations;
-        }
-        
-        return mockReservations.stream()
-                .filter(reservation -> {
-                    LocalDate reservationDate = reservation.getDateHeure().toLocalDate();
-                    if (startDate != null && endDate != null) {
-                        return !reservationDate.isBefore(startDate) && !reservationDate.isAfter(endDate);
-                    } else if (startDate != null) {
-                        return !reservationDate.isBefore(startDate);
-                    } else {
-                        return !reservationDate.isAfter(endDate);
-                    }
-                })
-                .collect(Collectors.toList());
+        System.out.println("Retour de " + filtered.size() + " réservations filtrées");
+        return filtered;
     }
 }
