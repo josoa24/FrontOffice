@@ -29,6 +29,14 @@
             padding: 20px;
             margin-bottom: 20px;
         }
+        .hidden-row {
+            display: none;
+        }
+        #loadingSpinner {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -38,53 +46,61 @@
             <h1 class="display-5 text-primary">Réservations de Voitures</h1>
             <p class="lead">Gestion et consultation des réservations</p>
         </div>
-        
+
         <!-- Filtre par date -->
         <div class="filter-section card">
             <div class="card-body">
                 <h5 class="card-title mb-3">Filtrer par date</h5>
-                <form th:action="@{/reservations}" method="get" class="row g-3 align-items-end">
+                <div class="row g-3 align-items-end">
                     <div class="col-md-6">
                         <label for="filterDate" class="form-label">Sélectionnez une date</label>
-                        <input type="date" 
-                               class="form-control" 
-                               id="filterDate" 
-                               name="filterDate"
+                        <input type="date" class="form-control" id="filterDate" 
                                th:value="${filterDate}">
                     </div>
                     <div class="col-md-6">
-                        <button type="submit" class="btn btn-primary me-2">
+                        <button type="button" class="btn btn-primary me-2" id="filterButton">
                             Filtrer
                         </button>
-                        <a th:href="@{/reservations/reset}" class="btn btn-outline-secondary">
+                        <button type="button" class="btn btn-outline-secondary" id="resetButton">
                             Réinitialiser
-                        </a>
+                        </button>
                     </div>
-                </form>
-                
+                </div>
+
                 <!-- Affichage du filtre actif -->
-                <div th:if="${filterDate}" class="mt-3">
+                <div class="mt-3" id="activeFilter" style="display: none;">
                     <span class="badge bg-info">
                         Filtre actif : Réservations du 
-                        <span th:text="${#temporals.format(filterDate, 'dd/MM/yyyy')}"></span>
+                        <span id="activeFilterDate"></span>
                     </span>
                 </div>
             </div>
         </div>
-        
+
+        <!-- Indicateur de chargement -->
+        <div id="loadingSpinner" class="text-center">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Chargement...</span>
+            </div>
+            <p class="mt-2">Filtrage en cours...</p>
+        </div>
+
         <!-- Tableau des réservations -->
         <div class="card">
             <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
                     <span>Liste des Réservations</span>
                     <div class="text-white">
-                        Total: <span th:text="${reservations.size()}"></span> réservation(s)
+                        Total: <span id="totalCount">0</span> réservation(s)
+                        <span id="filteredCount" style="display: none;">
+                            / <span id="filteredNumber">0</span> filtrée(s)
+                        </span>
                     </div>
                 </div>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover table-striped mb-0">
+                    <table class="table table-hover table-striped mb-0" id="reservationsTable">
                         <thead class="table-light">
                             <tr>
                                 <th scope="col">#ID</th>
@@ -94,27 +110,22 @@
                                 <th scope="col">Hôtel</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="reservationsBody">
+                            <!-- Les données seront injectées par JavaScript -->
                             <tr th:each="reservation : ${reservations}">
-                                <th scope="row" th:text="${reservation.idReservation}"></th>
+                                <td th:text="${reservation.idReservation}"></td>
                                 <td th:text="${reservation.idClient}"></td>
                                 <td th:text="${reservation.nbPassager}"></td>
                                 <td th:text="${#temporals.format(reservation.dateHeure, 'dd/MM/yyyy HH:mm')}"></td>
-                                <td th:text="${reservation.hotelNom}"></td>
+                                <td th:text="${reservation.hotel != null ? reservation.hotel.nom : 'N/A'}"></td>
                             </tr>
-                            
+
                             <!-- Message si aucune réservation -->
-                            <tr th:if="${reservations.isEmpty()}">
+                            <tr id="noDataMessage" th:if="${reservations.isEmpty()}">
                                 <td colspan="5" class="text-center py-5">
                                     <div class="text-muted">
                                         <h5>Aucune réservation trouvée</h5>
-                                        <p th:if="${filterDate}">
-                                            Aucune réservation pour le 
-                                            <span th:text="${#temporals.format(filterDate, 'dd/MM/yyyy')}"></span>
-                                        </p>
-                                        <p th:unless="${filterDate}">
-                                            Aucune réservation disponible
-                                        </p>
+                                        <p>Aucune réservation disponible</p>
                                     </div>
                                 </td>
                             </tr>
@@ -124,8 +135,247 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Script de filtrage -->
+    <script>
+        // Stocker les données originales
+        let allReservations = [];
+        
+        // Récupérer les données depuis Thymeleaf
+        document.addEventListener('DOMContentLoaded', function() {
+            // Extraire les données du tableau HTML
+            const rows = document.querySelectorAll('#reservationsBody tr');
+            allReservations = [];
+            
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 5) {
+                    const reservation = {
+                        idReservation: cells[0].textContent,
+                        idClient: cells[1].textContent,
+                        nbPassager: cells[2].textContent,
+                        dateHeure: cells[3].textContent,
+                        hotelNom: cells[4].textContent,
+                        // Pour le filtrage, on extrait la date
+                        dateOnly: extractDateFromDisplay(cells[3].textContent)
+                    };
+                    allReservations.push(reservation);
+                }
+            });
+            
+            // Mettre à jour le compteur initial
+            updateCounters(allReservations.length, null);
+            
+            // Définir la date d'aujourd'hui comme date par défaut
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('filterDate').value = today;
+            
+            // Afficher les événements des boutons
+            document.getElementById('filterButton').addEventListener('click', filterByDate);
+            document.getElementById('resetButton').addEventListener('click', resetFilter);
+            
+            // Filtrer automatiquement au chargement si une date est présente
+            const urlParams = new URLSearchParams(window.location.search);
+            const filterDateParam = urlParams.get('filterDate');
+            if (filterDateParam) {
+                document.getElementById('filterDate').value = filterDateParam;
+                filterByDate();
+            }
+        });
+        
+        // Fonction pour extraire la date du format d'affichage
+        function extractDateFromDisplay(dateTimeStr) {
+            // Format: "dd/MM/yyyy HH:mm"
+            const parts = dateTimeStr.split(' ');
+            if (parts.length > 0) {
+                return parts[0]; // Retourne "dd/MM/yyyy"
+            }
+            return '';
+        }
+        
+        // Fonction pour formater la date en dd/MM/yyyy
+        function formatDateForDisplay(dateStr) {
+            const date = new Date(dateStr);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            return `${day}/${month}/${year}`;
+        }
+        
+        // Fonction pour convertir la date en format comparable
+        function normalizeDate(dateStr) {
+            // dateStr peut être en format "dd/MM/yyyy" (de l'affichage) 
+            // ou "yyyy-MM-dd" (de l'input date)
+            if (dateStr.includes('/')) {
+                // Format "dd/MM/yyyy"
+                const [day, month, year] = dateStr.split('/');
+                return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+            }
+            // Déjà au format "yyyy-MM-dd"
+            return dateStr;
+        }
+        
+        // Fonction de filtrage
+        function filterByDate() {
+            const filterDateInput = document.getElementById('filterDate');
+            const selectedDate = filterDateInput.value;
+            
+            if (!selectedDate) {
+                alert('Veuillez sélectionner une date');
+                return;
+            }
+            
+            // Afficher l'indicateur de chargement
+            document.getElementById('loadingSpinner').style.display = 'block';
+            
+            // Simuler un délai pour l'effet visuel
+            setTimeout(() => {
+                // Formater la date sélectionnée pour la comparaison
+                const normalizedSelectedDate = normalizeDate(selectedDate);
+                
+                console.log('Date sélectionnée:', selectedDate);
+                console.log('Date normalisée:', normalizedSelectedDate);
+                
+                // Filtrer les réservations
+                const filteredReservations = allReservations.filter(reservation => {
+                    if (!reservation.dateOnly) return false;
+                    
+                    // Normaliser la date de la réservation
+                    const normalizedReservationDate = normalizeDate(reservation.dateOnly);
+                    
+                    console.log('Date réservation:', reservation.dateOnly, '→', normalizedReservationDate);
+                    
+                    // Comparer les dates
+                    const match = normalizedReservationDate === normalizedSelectedDate;
+                    if (match) {
+                        console.log('Réservation match:', reservation.idReservation);
+                    }
+                    return match;
+                });
+                
+                console.log('Résultats du filtrage:', filteredReservations.length, 'réservations');
+                
+                // Mettre à jour le tableau
+                updateTable(filteredReservations);
+                
+                // Mettre à jour l'affichage du filtre actif
+                if (selectedDate) {
+                    const formattedDate = formatDateForDisplay(selectedDate);
+                    document.getElementById('activeFilterDate').textContent = formattedDate;
+                    document.getElementById('activeFilter').style.display = 'block';
+                }
+                
+                // Mettre à jour les compteurs
+                updateCounters(allReservations.length, filteredReservations.length);
+                
+                // Masquer l'indicateur de chargement
+                document.getElementById('loadingSpinner').style.display = 'none';
+                
+                // Afficher un message si aucun résultat
+                if (filteredReservations.length === 0) {
+                    showNoResultsMessage(selectedDate);
+                }
+                
+            }, 500); // Délai simulé de 0.5 seconde
+        }
+        
+        // Fonction pour réinitialiser le filtre
+        function resetFilter() {
+            document.getElementById('filterDate').value = '';
+            document.getElementById('activeFilter').style.display = 'none';
+            
+            // Réafficher toutes les réservations
+            updateTable(allReservations);
+            
+            // Mettre à jour les compteurs
+            updateCounters(allReservations.length, null);
+            
+            // Cacher le message "aucun résultat"
+            hideNoResultsMessage();
+        }
+        
+        // Fonction pour mettre à jour le tableau
+        function updateTable(reservations) {
+            const tbody = document.getElementById('reservationsBody');
+            
+            // Vider le tableau
+            tbody.innerHTML = '';
+            
+            // Ajouter les nouvelles lignes
+            if (reservations.length === 0) {
+                // Afficher le message "aucune donnée"
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="5" class="text-center py-5">
+                        <div class="text-muted">
+                            <h5>Aucune réservation trouvée</h5>
+                            <p>Essayer une autre date</p>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            } else {
+                // Ajouter chaque réservation
+                reservations.forEach(reservation => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${reservation.idReservation}</td>
+                        <td>${reservation.idClient}</td>
+                        <td>${reservation.nbPassager}</td>
+                        <td>${reservation.dateHeure}</td>
+                        <td>${reservation.hotelNom}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+        
+        // Fonction pour mettre à jour les compteurs
+        function updateCounters(total, filtered) {
+            document.getElementById('totalCount').textContent = total;
+            
+            if (filtered !== null && filtered !== total) {
+                document.getElementById('filteredNumber').textContent = filtered;
+                document.getElementById('filteredCount').style.display = 'inline';
+            } else {
+                document.getElementById('filteredCount').style.display = 'none';
+            }
+        }
+        
+        // Fonction pour afficher un message quand aucun résultat
+        function showNoResultsMessage(date) {
+            // Cette fonction pourrait ajouter un message spécifique
+            console.log(`Aucune réservation pour la date: ${date}`);
+        }
+        
+        // Fonction pour cacher le message d'aucun résultat
+        function hideNoResultsMessage() {
+            // Cache le message spécifique si nécessaire
+        }
+        
+        // Fonction pour récupérer les données via API (option avancée)
+        async function fetchReservationsFromAPI(date) {
+            try {
+                let url = '/api/reservations';
+                if (date) {
+                    url += `?date=${date}`;
+                }
+                
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error('Erreur réseau');
+                }
+                
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Erreur lors de la récupération des données:', error);
+                return [];
+            }
+        }
+    </script>
 </body>
 </html>
