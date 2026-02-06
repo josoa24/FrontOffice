@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Réservations de Voitures</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 30px;
+            margin-bottom: 50px;
+        }
+        .card {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        .card-header {
+            background-color: #0d6efd;
+            color: white;
+            font-weight: bold;
+        }
+        .filter-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .table-responsive {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .badge-passager {
+            background-color: #20c997;
+        }
+        .date-cell {
+            min-width: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <h1 class="display-4 text-primary">
+                <i class="fas fa-car me-2"></i>Réservations de Voitures
+            </h1>
+            <p class="lead">Gérez et consultez vos réservations</p>
+        </div>
+        
+        <!-- Filtre par date -->
+        <div class="filter-section card">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-filter me-2"></i>Filtrer par date
+                </h5>
+                <form th:action="@{/reservations}" method="get" class="row g-3 align-items-end">
+                    <div class="col-md-6">
+                        <label for="filterDate" class="form-label">Sélectionnez une date</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-calendar-alt"></i>
+                            </span>
+                            <input type="date" 
+                                   class="form-control" 
+                                   id="filterDate" 
+                                   name="filterDate"
+                                   th:value="${filterDate ?: ''}">
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="submit" class="btn btn-primary me-2">
+                            <i class="fas fa-search me-1"></i>Filtrer
+                        </button>
+                        <a th:href="@{/reservations/reset}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i>Réinitialiser
+                        </a>
+                    </div>
+                </form>
+                
+                <!-- Affichage du filtre actif -->
+                <div th:if="${filterDate}" class="mt-3">
+                    <span class="badge bg-info">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Filtre actif : Réservations du 
+                        <span th:text="${#temporals.format(filterDate, 'dd/MM/yyyy')}"></span>
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tableau des réservations -->
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span>
+                        <i class="fas fa-list me-2"></i>
+                        Liste des Réservations
+                        <span class="badge bg-light text-dark ms-2" th:text="${reservations.size()}"></span>
+                    </span>
+                    <div class="text-white">
+                        Total: <span th:text="${reservations.size()}"></span> réservation(s)
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">#ID</th>
+                                <th scope="col">Client</th>
+                                <th scope="col">Passagers</th>
+                                <th scope="col">Date et Heure</th>
+                                <th scope="col">Hôtel</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="reservation : ${reservations}">
+                                <th scope="row" th:text="${reservation.idReservation}"></th>
+                                <td>
+                                    <span class="badge bg-primary">
+                                        <i class="fas fa-user me-1"></i>
+                                        <span th:text="${reservation.idClient}"></span>
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-passager">
+                                        <i class="fas fa-users me-1"></i>
+                                        <span th:text="${reservation.nbPassager}"></span> passager(s)
+                                    </span>
+                                </td>
+                                <td class="date-cell">
+                                    <i class="fas fa-clock me-1 text-secondary"></i>
+                                    <span th:text="${#temporals.format(reservation.dateHeure, 'dd/MM/yyyy HH:mm')}"></span>
+                                </td>
+                                <td>
+                                    <i class="fas fa-hotel me-1 text-warning"></i>
+                                    <span th:text="${reservation.hotelNom}"></span>
+                                </td>
+                            </tr>
+                            
+                            <!-- Message si aucune réservation -->
+                            <tr th:if="${reservations.isEmpty()}">
+                                <td colspan="5" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                                        <h5>Aucune réservation trouvée</h5>
+                                        <p th:if="${filterDate}">
+                                            Aucune réservation pour le 
+                                            <span th:text="${#temporals.format(filterDate, 'dd/MM/yyyy')}"></span>
+                                        </p>
+                                        <p th:unless="${filterDate}">
+                                            Aucune réservation disponible
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="mt-5 text-center text-muted">
+            <p>
+                <i class="fas fa-code me-1"></i>
+                Application de gestion de réservations - Spring Boot & Thymeleaf
+            </p>
+            <p class="small">
+                <i class="fas fa-sync-alt me-1"></i>
+                Données récupérées via API REST
+            </p>
+        </footer>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Script pour améliorer l'UX -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Focus sur le champ de date
+            const filterDateInput = document.getElementById('filterDate');
+            if (filterDateInput && !filterDateInput.value) {
+                filterDateInput.focus();
+            }
+            
+            // Ajouter un message de confirmation pour réinitialisation
+            const resetLinks = document.querySelectorAll('a[href*="/reset"]');
+            resetLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (window.location.search.includes('filterDate')) {
+                        if (!confirm('Voulez-vous vraiment réinitialiser le filtre ?')) {
+                            e.preventDefault();
+                        }
+                    }
+                });
+            });
+            
+            // Mettre à jour la date maximale (aujourd'hui)
+            const today = new Date().toISOString().split('T')[0];
+            if (filterDateInput) {
+                filterDateInput.max = today;
+            }
+        });
+    </script>
+</body>
+</html>
