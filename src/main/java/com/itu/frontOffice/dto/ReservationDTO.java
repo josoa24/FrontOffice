@@ -2,6 +2,8 @@ package com.itu.frontOffice.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import java.time.LocalDateTime;
 
 public class ReservationDTO {
@@ -15,8 +17,9 @@ public class ReservationDTO {
     @JsonProperty("nbPassager")
     private Integer nbPassager;
     
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm")
     @JsonProperty("dateHeure")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime dateHeure;
     
     @JsonProperty("idHotel")
@@ -47,12 +50,19 @@ public class ReservationDTO {
     public HotelDTO getHotel() { return hotel; }
     public void setHotel(HotelDTO hotel) { this.hotel = hotel; }
     
-    // Méthode utilitaire pour obtenir le nom de l'hôtel
     public String getHotelNom() {
         return hotel != null ? hotel.getNom() : null;
     }
     
-    // DTO pour l'hôtel
+    @Override
+    public String toString() {
+        return "ReservationDTO{" +
+                "idReservation=" + idReservation +
+                ", dateHeure=" + dateHeure +
+                ", nbPassager=" + nbPassager +
+                '}';
+    }
+    
     public static class HotelDTO {
         @JsonProperty("idHotel")
         private Long idHotel;

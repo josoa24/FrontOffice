@@ -45,7 +45,6 @@ public class ReservationController {
         
         System.out.println("Nombre de réservations retournées: " + reservations.size());
         
-        // DEBUG: Afficher les premières réservations
         if (!reservations.isEmpty()) {
             System.out.println("=== PREMIÈRES RÉSERVATIONS ===");
             for (int i = 0; i < Math.min(3, reservations.size()); i++) {

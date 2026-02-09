@@ -17,7 +17,6 @@ public class ApiResponseDTO {
     @JsonProperty("status")
     private String status;
     
-    // Getters et Setters
     public Integer getCode() { return code; }
     public void setCode(Integer code) { this.code = code; }
     
@@ -30,7 +29,6 @@ public class ApiResponseDTO {
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }
     
-    // Classe interne pour la partie data
     public static class DataDTO {
         @JsonProperty("reservations")
         private List<ReservationDTO> reservations;
