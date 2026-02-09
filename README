@@ -1,0 +1,22 @@
+sprint-2 : 
+    BO :
+        
+        vehicule : 
+                id 
+                reference 
+                nbr_place 
+                type_carburant : H , D , ES , EL
+            CRUD 
+
+        protection appel API : 
+            creation table
+                tocken : 
+                    id 
+                    token 
+                    date_heure_expiration 
+            pas d'innterface : main 
+
+        suite : 
+            appel url tsy maintsy mandefa tocken , tonga ao anaty list : 
+            verifier tocken si != null et pas d'expiré , si expirer : pas d'accès 
+

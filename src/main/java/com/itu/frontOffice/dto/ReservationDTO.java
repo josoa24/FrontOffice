@@ -1,4 +1,3 @@
-// ===== ReservationDTO.java (AMÉLIORÉ) =====
 package com.itu.frontOffice.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -20,7 +19,7 @@ public class ReservationDTO {
     private Integer nbPassager;
     
     @JsonProperty("dateHeure")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm")
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime dateHeure;
     
