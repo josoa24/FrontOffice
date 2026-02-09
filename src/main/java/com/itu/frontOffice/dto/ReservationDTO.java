@@ -1,3 +1,4 @@
+// ===== ReservationDTO.java (AMÉLIORÉ) =====
 package com.itu.frontOffice.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -5,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class ReservationDTO {
     
@@ -58,8 +60,9 @@ public class ReservationDTO {
     public String toString() {
         return "ReservationDTO{" +
                 "idReservation=" + idReservation +
-                ", dateHeure=" + dateHeure +
+                ", dateHeure=" + (dateHeure != null ? dateHeure.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) : "null") +
                 ", nbPassager=" + nbPassager +
+                ", hotel=" + (hotel != null ? hotel.getNom() : "null") +
                 '}';
     }
     

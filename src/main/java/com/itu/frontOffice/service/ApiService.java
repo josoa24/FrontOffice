@@ -1,3 +1,4 @@
+// ===== ApiService.java (CORRIGÉ) =====
 package com.itu.frontOffice.service;
 
 import com.itu.frontOffice.dto.ApiResponseDTO;
@@ -9,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -52,9 +52,11 @@ public class ApiService {
             
             // Debug: afficher toutes les dates
             reservations.forEach(res -> {
-                System.out.println("Réservation #" + res.getIdReservation() + 
-                    " - DateTime: " + res.getDateHeure() +
-                    " - Date seule: " + (res.getDateHeure() != null ? res.getDateHeure().toLocalDate() : "null"));
+                if (res.getDateHeure() != null) {
+                    System.out.println("Réservation #" + res.getIdReservation() + 
+                        " - DateTime: " + res.getDateHeure() +
+                        " - Date seule: " + res.getDateHeure().toLocalDate());
+                }
             });
             
             return reservations;
@@ -83,27 +85,36 @@ public class ApiService {
             return Collections.emptyList();
         }
         
-        // Filtrage côté client avec debug détaillé
+        // Filtrage côté client avec correction
         List<ReservationDTO> filtered = allReservations.stream()
             .filter(reservation -> {
+                // Vérification de nullité
+                if (reservation == null) {
+                    System.out.println("Réservation null ignorée");
+                    return false;
+                }
+                
                 if (reservation.getDateHeure() == null) {
                     System.out.println("Réservation #" + reservation.getIdReservation() + " - dateHeure est NULL");
                     return false;
                 }
                 
+                // Extraction de la date sans l'heure
                 LocalDate resDate = reservation.getDateHeure().toLocalDate();
-                boolean matches = resDate.isEqual(date);
+                
+                // Comparaison stricte des dates
+                boolean matches = resDate.equals(date);
                 
                 System.out.println("Réservation #" + reservation.getIdReservation() + 
-                    " - Date: " + resDate + 
-                    " - Correspond: " + matches +
-                    " (recherché: " + date + ")");
+                    " - Date réservation: " + resDate + 
+                    " - Date recherchée: " + date +
+                    " - Correspond: " + matches);
                 
                 return matches;
             })
             .collect(Collectors.toList());
         
-        System.out.println("Résultat du filtrage: " + filtered.size() + " réservation(s)");
+        System.out.println("Résultat du filtrage: " + filtered.size() + " réservation(s) trouvée(s)");
         System.out.println("=== FIN FILTRAGE ===\n");
         
         return filtered;

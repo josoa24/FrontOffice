@@ -1,3 +1,4 @@
+// ===== ReservationController.java (AMÉLIORÉ) =====
 package com.itu.frontOffice.controller;
 
 import com.itu.frontOffice.dto.ReservationDTO;
@@ -27,45 +28,43 @@ public class ReservationController {
         System.out.println("\n=== DÉBUT CONTROLLEUR listReservations ===");
         System.out.println("Paramètre filterDate reçu: " + filterDate);
         
-        if (filterDate != null) {
-            System.out.println("filterDate (toString): " + filterDate.toString());
-            System.out.println("filterDate (ISO): " + filterDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
-            System.out.println("filterDate (dd/MM/yyyy): " + filterDate.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-        }
-        
         List<ReservationDTO> reservations;
         
         if (filterDate != null) {
-            System.out.println("Appel de getReservationsByDate avec: " + filterDate);
+            System.out.println("Filtrage avec date: " + filterDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
             reservations = apiService.getReservationsByDate(filterDate);
         } else {
-            System.out.println("Appel de getAllReservations");
+            System.out.println("Aucun filtre - Récupération de toutes les réservations");
             reservations = apiService.getAllReservations();
         }
         
-        System.out.println("Nombre de réservations retournées: " + reservations.size());
+        System.out.println("Nombre de réservations retournées au controller: " + reservations.size());
         
+        // Debug détaillé
         if (!reservations.isEmpty()) {
-            System.out.println("=== PREMIÈRES RÉSERVATIONS ===");
-            for (int i = 0; i < Math.min(3, reservations.size()); i++) {
+            System.out.println("=== APERÇU DES RÉSERVATIONS ===");
+            int maxDisplay = Math.min(5, reservations.size());
+            for (int i = 0; i < maxDisplay; i++) {
                 ReservationDTO r = reservations.get(i);
-                System.out.println("  " + (i+1) + ". ID: " + r.getIdReservation() + 
-                                 ", Date: " + r.getDateHeure() +
-                                 ", Hotel: " + (r.getHotel() != null ? r.getHotel().getNom() : "N/A"));
+                System.out.println("  " + (i+1) + ". " + r.toString());
             }
+            if (reservations.size() > maxDisplay) {
+                System.out.println("  ... et " + (reservations.size() - maxDisplay) + " autre(s)");
+            }
+        } else {
+            System.out.println("⚠️ AUCUNE RÉSERVATION À AFFICHER");
         }
         
         model.addAttribute("reservations", reservations);
         model.addAttribute("filterDate", filterDate);
         
-        System.out.println("=== FIN CONTROLLEUR ===");
+        System.out.println("=== FIN CONTROLLEUR ===\n");
         return "reservations/list";
     }
     
     @GetMapping("/reset")
     public String resetFilter() {
+        System.out.println("Reset du filtre - Redirection vers /reservations");
         return "redirect:/reservations";
     }
-    
-    
 }
