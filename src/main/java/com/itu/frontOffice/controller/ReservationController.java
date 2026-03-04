@@ -15,21 +15,20 @@ import java.util.List;
 @Controller
 @RequestMapping("/reservations")
 public class ReservationController {
-    
+
     @Autowired
     private ApiService apiService;
-    
+
     @GetMapping
     public String listReservations(
-            @RequestParam(value = "filterDate", required = false) 
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate filterDate,
+            @RequestParam(value = "filterDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate filterDate,
             Model model) {
-        
+
         System.out.println("\n=== DÉBUT CONTROLLEUR listReservations ===");
         System.out.println("Paramètre filterDate reçu: " + filterDate);
-        
+
         List<ReservationDTO> reservations;
-        
+
         if (filterDate != null) {
             System.out.println("Filtrage avec date: " + filterDate.format(DateTimeFormatter.ISO_LOCAL_DATE));
             reservations = apiService.getReservationsByDate(filterDate);
@@ -37,16 +36,16 @@ public class ReservationController {
             System.out.println("Aucun filtre - Récupération de toutes les réservations");
             reservations = apiService.getAllReservations();
         }
-        
+
         System.out.println("Nombre de réservations retournées au controller: " + reservations.size());
-        
+
         // Debug détaillé
         if (!reservations.isEmpty()) {
             System.out.println("=== APERÇU DES RÉSERVATIONS ===");
             int maxDisplay = Math.min(5, reservations.size());
             for (int i = 0; i < maxDisplay; i++) {
                 ReservationDTO r = reservations.get(i);
-                System.out.println("  " + (i+1) + ". " + r.toString());
+                System.out.println("  " + (i + 1) + ". " + r.toString());
             }
             if (reservations.size() > maxDisplay) {
                 System.out.println("  ... et " + (reservations.size() - maxDisplay) + " autre(s)");
@@ -54,14 +53,21 @@ public class ReservationController {
         } else {
             System.out.println("⚠️ AUCUNE RÉSERVATION À AFFICHER");
         }
-        
+
         model.addAttribute("reservations", reservations);
         model.addAttribute("filterDate", filterDate);
-        
+
+        // Vérifier s'il y a une erreur de token
+        String apiError = apiService.getLastApiError();
+        if (apiError != null) {
+            model.addAttribute("tokenError", apiError);
+            System.out.println("ERREUR API détectée: " + apiError);
+        }
+
         System.out.println("=== FIN CONTROLLEUR ===\n");
         return "reservations/list";
     }
-    
+
     @GetMapping("/reset")
     public String resetFilter() {
         System.out.println("Reset du filtre - Redirection vers /reservations");

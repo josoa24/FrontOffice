@@ -5,131 +5,547 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Liste des Réservations</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #6366f1;
+            --primary-dark: #3730a3;
+            --accent: #06b6d4;
+            --surface: #ffffff;
+            --surface-alt: #f8fafc;
+            --bg: #eef2f7;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+            --shadow-md: 0 4px 12px rgba(0,0,0,.07), 0 2px 4px rgba(0,0,0,.04);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,.08), 0 4px 8px rgba(0,0,0,.04);
+            --radius: 12px;
+            --radius-sm: 8px;
+            --transition: .25s cubic-bezier(.4,0,.2,1);
+        }
+
+        * { box-sizing: border-box; }
+
         body {
-            background-color: #f8f9fa;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text-primary);
+            min-height: 100vh;
         }
 
-        .container {
-            margin-top: 30px;
-            margin-bottom: 50px;
+        /* ---- Navbar ---- */
+        .top-navbar {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            padding: 0;
+            box-shadow: 0 2px 12px rgba(79,70,229,.35);
+        }
+        .top-navbar .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: .85rem;
+            padding-bottom: .85rem;
+        }
+        .navbar-brand {
+            color: #fff !important;
+            font-weight: 700;
+            font-size: 1.25rem;
+            letter-spacing: -.3px;
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            text-decoration: none;
+        }
+        .navbar-brand i { font-size: 1.5rem; }
+        .navbar-info {
+            color: rgba(255,255,255,.8);
+            font-size: .85rem;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
         }
 
-        .card {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        /* ---- Page wrapper ---- */
+        .page-wrapper {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 2rem 1rem 3rem;
+        }
+
+        /* ---- Page header ---- */
+        .page-header {
+            margin-bottom: 1.75rem;
+        }
+        .page-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+            letter-spacing: -.4px;
+        }
+        .page-header p {
+            color: var(--text-secondary);
+            margin: .25rem 0 0;
+            font-size: .95rem;
+        }
+
+        /* ---- Cards ---- */
+        .card-custom {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow var(--transition);
+        }
+        .card-custom:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        /* ---- Filter section ---- */
+        .filter-card {
+            margin-bottom: 1.5rem;
+            padding: 1.5rem 1.75rem;
+        }
+        .filter-card .filter-title {
+            font-weight: 600;
+            font-size: .95rem;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+        .filter-card .filter-title i {
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+        .filter-card .form-label {
+            font-size: .82rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: .4px;
+            margin-bottom: .4rem;
+        }
+        .filter-card .form-control {
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: .6rem .85rem;
+            font-size: .9rem;
+            transition: border-color var(--transition), box-shadow var(--transition);
+        }
+        .filter-card .form-control:focus {
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+        }
+        .btn-filter {
+            background: var(--primary);
+            color: #fff;
             border: none;
+            border-radius: var(--radius-sm);
+            padding: .6rem 1.5rem;
+            font-weight: 600;
+            font-size: .875rem;
+            transition: background var(--transition), transform var(--transition);
+        }
+        .btn-filter:hover {
+            background: var(--primary-dark);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+        .btn-reset {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: .6rem 1.25rem;
+            font-weight: 500;
+            font-size: .875rem;
+            text-decoration: none;
+            transition: all var(--transition);
+        }
+        .btn-reset:hover {
+            background: var(--surface-alt);
+            color: var(--text-primary);
+            border-color: var(--text-muted);
+        }
+        .active-filter-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            background: rgba(79,70,229,.08);
+            color: var(--primary);
+            font-size: .8rem;
+            font-weight: 600;
+            padding: .35rem .85rem;
+            border-radius: 9999px;
+            margin-top: 1rem;
+        }
+        .active-filter-badge i { font-size: .7rem; }
+
+        /* ---- Token error alert ---- */
+        .alert-token {
+            background: linear-gradient(135deg, #fef2f2, #fff1f2);
+            border: 1px solid #fecaca;
+            border-left: 4px solid #ef4444;
+            border-radius: var(--radius-sm);
+            padding: 1rem 1.25rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: flex-start;
+            gap: .75rem;
+        }
+        .alert-token .alert-icon {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #fee2e2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #dc2626;
+            font-size: 1.1rem;
+        }
+        .alert-token .alert-content strong {
+            color: #991b1b;
+            font-size: .9rem;
+        }
+        .alert-token .alert-content p {
+            color: #b91c1c;
+            font-size: .85rem;
+            margin: .2rem 0 0;
+        }
+        .alert-token .btn-close {
+            margin-left: auto;
+            align-self: center;
+            opacity: .5;
         }
 
-        .card-header {
-            background-color: #0d6efd;
-            color: white;
-            font-weight: bold;
+        /* ---- Data table card ---- */
+        .table-card .table-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: #fff;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius) var(--radius) 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .table-header .table-title {
+            font-weight: 600;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+        .table-header .table-count {
+            font-size: .8rem;
+            background: rgba(255,255,255,.2);
+            padding: .3rem .85rem;
+            border-radius: 9999px;
+            font-weight: 500;
+            backdrop-filter: blur(4px);
         }
 
-        .filter-section {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
+        .table-responsive { border-radius: 0 0 var(--radius) var(--radius); overflow: hidden; }
+
+        .data-table {
+            margin: 0;
+            font-size: .875rem;
         }
+        .data-table thead {
+            background: var(--surface-alt);
+        }
+        .data-table thead th {
+            font-size: .75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: var(--text-secondary);
+            padding: .85rem 1rem;
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+        .data-table tbody tr {
+            transition: background var(--transition);
+        }
+        .data-table tbody tr:hover {
+            background: rgba(79,70,229,.03);
+        }
+        .data-table tbody td {
+            padding: .85rem 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Cell type badges */
+        .cell-id {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: .8rem;
+        }
+        .cell-client {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+        }
+        .cell-client .avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-light), var(--accent));
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .65rem;
+            font-weight: 700;
+        }
+        .cell-passengers {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            background: var(--surface-alt);
+            padding: .25rem .65rem;
+            border-radius: 9999px;
+            font-weight: 500;
+            font-size: .82rem;
+        }
+        .cell-passengers i {
+            color: var(--text-muted);
+            font-size: .75rem;
+        }
+        .cell-datetime {
+            white-space: nowrap;
+        }
+        .cell-datetime .date {
+            font-weight: 500;
+        }
+        .cell-datetime .time {
+            color: var(--text-secondary);
+            font-size: .8rem;
+            margin-left: .25rem;
+        }
+        .cell-hotel {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+        }
+        .cell-hotel i { color: var(--accent); font-size: .85rem; }
+
+        /* Empty state */
+        .empty-state {
+            padding: 3.5rem 1rem;
+            text-align: center;
+        }
+        .empty-state .empty-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--surface-alt);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.75rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+        .empty-state h5 {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: .35rem;
+        }
+        .empty-state p {
+            color: var(--text-secondary);
+            font-size: .875rem;
+            margin: 0;
+        }
+
+        /* ---- Footer ---- */
+        .page-footer {
+            text-align: center;
+            padding: 1.5rem 0;
+            color: var(--text-muted);
+            font-size: .78rem;
+        }
+
+        /* ---- Animations ---- */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .animate-in {
+            animation: fadeInUp .45s ease-out both;
+        }
+        .animate-in-delay { animation-delay: .1s; }
+        .animate-in-delay-2 { animation-delay: .2s; }
     </style>
 </head>
 
 <body>
-    <div class="container">
-        <!-- Header -->
-        <div class="text-center mb-4">
-            <h1 class="display-5 text-primary">Réservations de Voitures</h1>
-            <p class="lead">Gestion et consultation des réservations</p>
+    <!-- Navbar -->
+    <nav class="top-navbar">
+        <div class="container">
+            <a class="navbar-brand" href="/reservations">
+                <i class="bi bi-car-front-fill"></i>
+                Réservation de véhicules
+            </a>
+            <span class="navbar-info">
+                <i class="bi bi-clock"></i>
+                Front Office
+            </span>
+        </div>
+    </nav>
+
+    <div class="page-wrapper">
+        <!-- Page header -->
+        <div class="page-header animate-in">
+            <h1>Réservations</h1>
+            <p>Gestion et consultation des réservations de voitures</p>
+        </div>
+
+        <!-- Alerte Token Expiré -->
+        <div th:if="${tokenError}" class="alert-token animate-in">
+            <div class="alert-icon">
+                <i class="bi bi-shield-exclamation"></i>
+            </div>
+            <div class="alert-content">
+                <strong>Erreur d'authentification</strong>
+                <p th:text="${tokenError}"></p>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
 
         <!-- Filtre par date -->
-        <div class="filter-section card">
-            <div class="card-body">
-                <h5 class="card-title mb-3">Filtrer par date</h5>
-                <form th:action="@{/reservations}" method="get" class="row g-3 align-items-end">
-                    <div class="col-md-6">
-                        <label for="filterDate" class="form-label">Sélectionnez une date</label>
-                        <input type="date" class="form-control" id="filterDate" name="filterDate"
-                            th:value="${filterDate}">
-                    </div>
-                    <div class="col-md-6">
-                        <button type="submit" class="btn btn-primary me-2">
-                            Filtrer
-                        </button>
-                        <a th:href="@{/reservations/reset}" class="btn btn-outline-secondary">
-                            Réinitialiser
-                        </a>
-                    </div>
-                </form>
-
-                <!-- Affichage du filtre actif -->
-                <div th:if="${filterDate}" class="mt-3">
-                    <span class="badge bg-info">
-                        Filtre actif : Réservations du
-                        <span th:text="${#temporals.format(filterDate, 'dd/MM/yyyy')}"></span>
-                    </span>
+        <div class="card-custom filter-card animate-in animate-in-delay">
+            <div class="filter-title">
+                <i class="bi bi-funnel-fill"></i>
+                Filtrer par date
+            </div>
+            <form th:action="@{/reservations}" method="get" class="row g-3 align-items-end">
+                <div class="col-sm-5">
+                    <label for="filterDate" class="form-label">Date</label>
+                    <input type="date" class="form-control" id="filterDate" name="filterDate"
+                        th:value="${filterDate}">
                 </div>
+                <div class="col-sm-7 d-flex gap-2">
+                    <button type="submit" class="btn-filter">
+                        <i class="bi bi-search me-1"></i> Rechercher
+                    </button>
+                    <a th:href="@{/reservations/reset}" class="btn-reset">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Réinitialiser
+                    </a>
+                </div>
+            </form>
+
+            <!-- Affichage du filtre actif -->
+            <div th:if="${filterDate}">
+                <span class="active-filter-badge">
+                    <i class="bi bi-circle-fill"></i>
+                    Filtre actif — Réservations du
+                    <span th:text="${#temporals.format(filterDate, 'dd/MM/yyyy')}"></span>
+                </span>
             </div>
         </div>
 
         <!-- Tableau des réservations -->
-        <div class="card">
-            <div class="card-header">
-                <div class="d-flex justify-content-between align-items-center">
-                    <span>Liste des Réservations</span>
-                    <div class="text-white">
-                        Total: <span th:text="${reservations.size()}"></span> réservation(s)
-                    </div>
-                </div>
+        <div class="card-custom table-card animate-in animate-in-delay-2">
+            <div class="table-header">
+                <span class="table-title">
+                    <i class="bi bi-list-ul"></i>
+                    Liste des Réservations
+                </span>
+                <span class="table-count">
+                    <span th:text="${reservations.size()}"></span> résultat(s)
+                </span>
             </div>
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover table-striped mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th scope="col">#ID</th>
-                                <th scope="col">Client</th>
-                                <th scope="col">Passagers</th>
-                                <th scope="col">Date et Heure</th>
-                                <th scope="col">Hôtel</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr th:each="reservation : ${reservations}">
-                                <td th:text="${reservation.idReservation}"></td>
-                                <td th:text="${reservation.idClient}"></td>
-                                <td th:text="${reservation.nbPassager}"></td>
-                                <td th:text="${#temporals.format(reservation.dateHeure, 'dd/MM/yyyy HH:mm')}"></td>
-                                <td th:text="${reservation.hotel != null ? reservation.hotel.nom : 'N/A'}"></td>
-                            </tr>
+            <div class="table-responsive">
+                <table class="table data-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">Client</th>
+                            <th scope="col">Passagers</th>
+                            <th scope="col">Date &amp; Heure</th>
+                            <th scope="col">Hôtel</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="reservation : ${reservations}">
+                            <td>
+                                <span class="cell-id" th:text="'#' + ${reservation.idReservation}"></span>
+                            </td>
+                            <td>
+                                <span class="cell-client">
+                                    <span class="avatar">
+                                        <i class="bi bi-person-fill"></i>
+                                    </span>
+                                    <span th:text="${reservation.idClient}"></span>
+                                </span>
+                            </td>
+                            <td>
+                                <span class="cell-passengers">
+                                    <i class="bi bi-people-fill"></i>
+                                    <span th:text="${reservation.nbPassager}"></span>
+                                </span>
+                            </td>
+                            <td class="cell-datetime">
+                                <span class="date" th:text="${#temporals.format(reservation.dateHeure, 'dd/MM/yyyy')}"></span>
+                                <span class="time" th:text="'à ' + ${#temporals.format(reservation.dateHeure, 'HH:mm')}"></span>
+                            </td>
+                            <td>
+                                <span class="cell-hotel">
+                                    <i class="bi bi-building"></i>
+                                    <span th:text="${reservation.hotel != null ? reservation.hotel.nom : 'N/A'}"></span>
+                                </span>
+                            </td>
+                        </tr>
 
-                            <!-- Message si aucune réservation -->
-                            <tr th:if="${reservations.isEmpty()}">
-                                <td colspan="5" class="text-center py-5">
-                                    <div class="text-muted">
-                                        <h5>Aucune réservation trouvée</h5>
-                                        <p th:if="${filterDate}">
-                                            Aucune réservation pour le
-                                            <span th:text="${#temporals.format(filterDate, 'dd/MM/yyyy')}"></span>
-                                        </p>
-                                        <p th:unless="${filterDate}">
-                                            Aucune réservation disponible
-                                        </p>
+                        <!-- Message si aucune réservation -->
+                        <tr th:if="${reservations.isEmpty()}">
+                            <td colspan="5">
+                                <div class="empty-state">
+                                    <div class="empty-icon">
+                                        <i class="bi bi-inbox"></i>
                                     </div>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+                                    <h5>Aucune réservation trouvée</h5>
+                                    <p th:if="${filterDate}">
+                                        Aucune réservation pour le
+                                        <span th:text="${#temporals.format(filterDate, 'dd/MM/yyyy')}"></span>
+                                    </p>
+                                    <p th:unless="${filterDate}">
+                                        Aucune réservation disponible pour le moment
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="page-footer">
+            &copy; 2026 RéserVoiture — Front Office
         </div>
     </div>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
